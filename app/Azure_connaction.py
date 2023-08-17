@@ -1,18 +1,14 @@
 import os
 
+from starlette.responses import JSONResponse
+
 from app.Help_function import blob_convert_to_csv
 
 from azure.storage.blob import BlobServiceClient
-from dotenv import load_dotenv
 
-
-# load_dotenv('.env')
-# azure_connecting_string = os.getenv('AZURE_STRING')
-#
 
 def get_blob_data(container_name: str, folder_name: str):
     try:
-        print('in1')
 
         connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
@@ -39,15 +35,34 @@ def get_blob_data(container_name: str, folder_name: str):
 
 
 def upload_blob_to_azure(container_name, folder_name, local_file_path):
-    print('in2')
+    try:
+        connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
 
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        container_client = blob_service_client.get_container_client(container_name)
+
+        full_blob_name = f"{folder_name}/input/{local_file_path}"
+        blob_client = container_client.get_blob_client(full_blob_name)
+
+        with open(local_file_path, 'rb') as data:
+            blob_client.upload_blob(data)
+    except Exception as e:
+        error_respose = {"error": str(e), 'message': 'blob my be alredy exist'}
+        return JSONResponse(content=error_respose, status_code=500)
+
+
+def azure_blob_exist(container_name, blob_name):
+    # Define your connection string
     connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
 
+    # Initialize the BlobServiceClient
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+
+    # Get a reference to the container and blob
     container_client = blob_service_client.get_container_client(container_name)
+    blob_client = container_client.get_blob_client(blob_name)
 
-    full_blob_name = f"{folder_name}/input/{local_file_path}"
-    blob_client = container_client.get_blob_client(full_blob_name)
-
-    with open(local_file_path, 'rb') as data:
-        blob_client.upload_blob(data)
+    # Check if the blob exists
+    blob_exists = blob_client.exists()
+    print(blob_exists)
+    return blob_exists

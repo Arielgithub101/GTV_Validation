@@ -15,13 +15,9 @@ router = APIRouter(
 )
 
 
-# load_dotenv('.env')
-# azure_accunt = os.getenv('AZURE_ACCUNT_NAME')
-# azure_key = os.getenv('AZURE_KEY')
-
-
 @router.post("/")
 def process_excel_route(excel: ExcelProcessing):
+    # validation that work on the blob data
     try:
         blob_name, local_blob_csv_data = get_blob_data(excel.container_name, excel.folder_name)
 
@@ -50,13 +46,13 @@ def process_excel_route(excel: ExcelProcessing):
         os.rename(new_file_name, new_tgv_path)
 
         upload_blob_to_azure(excel.container_name, excel.folder_name, new_tgv_path)
-
         os.remove(local_blob_csv_data)
         os.remove(new_tgv_path)
 
         return JSONResponse(content={"message": "new file created successfully and was upload to the azure storage",
                                      "file_name": f'{new_tgv_path}'},
                             status_code=200)
+
     except ValueError as e:
         error_respose = {"error": str(e)}
         return JSONResponse(content=error_respose, status_code=500)
