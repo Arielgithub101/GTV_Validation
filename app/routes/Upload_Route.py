@@ -1,27 +1,27 @@
 import os
-import openpyxl
-import pandas as pd
 
+import pandas as pd
 from fastapi import APIRouter
-from dotenv import load_dotenv
 from starlette.responses import JSONResponse
 
-from app.Help_function import tgv_2_xlsx
-from app.Validation.BM_validation import ExcelProcessing
-from app.Azure_connaction import get_blob_data, upload_blob_to_azure
+from app.utils.Azure_connaction import get_blob_data, upload_blob_to_azure
+from app.utils.Help_function import tgv_2_xlsx
+from app.Validation.BM_validation import FileInfo
 
 router = APIRouter(
-    prefix="/process_excel"
+    prefix="/tgv_process"
 )
 
 
 @router.post("/")
-def process_excel_route(excel: ExcelProcessing):
+def process_file(excel: FileInfo):
     # validation that work on the blob data
     try:
-        blob_name, local_blob_csv_data = get_blob_data(excel.container_name, excel.folder_name)
+        print('in rout1')
+        blob_name, local_blob_csv_data = get_blob_data(excel.accunt_name, excel.container_name, excel.folder_name)
 
         df = pd.read_csv(local_blob_csv_data, header=None)
+        print('in rout2')
 
         # Specify the columns to check (B, C, and D)
         columns_to_check = df.iloc[:, 1:4]
@@ -39,18 +39,22 @@ def process_excel_route(excel: ExcelProcessing):
         new_file_name = tgv_2_xlsx(blob_name)
 
         df.to_excel(new_file_name, index=False)
+        print('in rout3')
 
         directory, filename = os.path.split(new_file_name)
         new_filename = os.path.splitext(filename)[0] + ".tgv"
         new_tgv_path = os.path.join(directory, new_filename)
         os.rename(new_file_name, new_tgv_path)
 
-        upload_blob_to_azure(excel.container_name, excel.folder_name, new_tgv_path)
+        upload_blob_to_azure(excel.accunt_name, excel.container_name, excel.folder_name, new_tgv_path)
         os.remove(local_blob_csv_data)
         os.remove(new_tgv_path)
 
         return JSONResponse(content={"message": "new file created successfully and was upload to the azure storage",
-                                     "file_name": f'{new_tgv_path}'},
+                                     "azure_account": f'{excel.accunt_name}',
+                                     "azure_container": f"{excel.container_name}",
+                                     "azure_folder": f"{excel.folder_name}",
+                                     "file_name in a": f'{new_tgv_path}'},
                             status_code=200)
 
     except ValueError as e:

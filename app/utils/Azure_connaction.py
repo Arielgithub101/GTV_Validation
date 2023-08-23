@@ -1,16 +1,16 @@
-import os
-
 from starlette.responses import JSONResponse
 
-from app.Help_function import blob_convert_to_csv
+from app.utils.Help_function import blob_convert_to_csv
+from app.config.azure_config import ConfigConnection
 
 from azure.storage.blob import BlobServiceClient
 
 
-def get_blob_data(container_name: str, folder_name: str):
+def get_blob_data(account_name: str, container_name: str, folder_name: str):
     try:
+        print('in rout1 in func1')
 
-        connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
+        connection_string = ConfigConnection.get_azure_connection_string(account_name)
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
         container_client = blob_service_client.get_container_client(container_name)
@@ -34,9 +34,11 @@ def get_blob_data(container_name: str, folder_name: str):
         return 0, 0
 
 
-def upload_blob_to_azure(container_name, folder_name, local_file_path):
+def upload_blob_to_azure(account_name: str, container_name, folder_name, local_file_path):
     try:
-        connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
+        print('in rout1 in func2')
+
+        connection_string = ConfigConnection.get_azure_connection_string(account_name)
 
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         container_client = blob_service_client.get_container_client(container_name)
@@ -51,9 +53,9 @@ def upload_blob_to_azure(container_name, folder_name, local_file_path):
         return JSONResponse(content=error_respose, status_code=500)
 
 
-def azure_blob_exist(container_name, blob_name):
+def azure_blob_exist(account_name: str, container_name, blob_name):
     # Define your connection string
-    connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
+    connection_string = ConfigConnection.get_azure_connection_string(account_name)
 
     # Initialize the BlobServiceClient
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
