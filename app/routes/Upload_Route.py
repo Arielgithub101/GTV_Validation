@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
 from app.utils.Azure_connaction import get_blob_data, upload_blob_to_azure
-from app.utils.Help_function import tgv_2_xlsx
+from app.utils.Help_function import df_validation, tgv_2_xlsx
 from app.Validation.BM_validation import FileInfo
 
 router = APIRouter(
@@ -17,29 +17,14 @@ router = APIRouter(
 def process_file(excel: FileInfo):
     # validation that work on the blob data
     try:
-        print('in rout1')
-        blob_name, local_blob_csv_data = get_blob_data(excel.accunt_name, excel.container_name, excel.folder_name)
 
-        df = pd.read_csv(local_blob_csv_data, header=None)
-        print('in rout2')
+        try:
+            blob_name, local_blob_csv_data = get_blob_data(excel.accunt_name, excel.container_name, excel.folder_name)
+        except Exception as e:
+            error_message = "An error occurred while connecting azure, check connection info : " + str(e)
+            return JSONResponse(content=error_message, status_code=400)
 
-        # Specify the columns to check (B, C, and D)
-        columns_to_check = df.iloc[:, 1:4]
-
-        # Iterate over all rows and columns
-        for index, row in df.iterrows():
-            for column in columns_to_check:
-                cell_value = row[column]
-                if -1 <= cell_value <= 1:
-                    # If any value in columns B, C, or D is between -1 and 1, set all three cells to 0
-                    df.at[index, 1] = 0
-                    df.at[index, 2] = 0
-                    df.at[index, 3] = 0
-
-        new_file_name = tgv_2_xlsx(blob_name)
-
-        df.to_excel(new_file_name, index=False)
-        print('in rout3')
+        new_file_name = df_validation(local_blob_csv_data, blob_name)
 
         directory, filename = os.path.split(new_file_name)
         new_filename = os.path.splitext(filename)[0] + ".tgv"
@@ -59,4 +44,4 @@ def process_file(excel: FileInfo):
 
     except ValueError as e:
         error_respose = {"error": str(e)}
-        return JSONResponse(content=error_respose, status_code=500)
+        return JSONResponse(content=error_respose, status_code=400)
