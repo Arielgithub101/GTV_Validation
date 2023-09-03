@@ -11,6 +11,7 @@ openpyxl = "*"
 python-dotenv = "*"
 starlette = "*"
 azure-storage-blob = "*"
+numpy = "*"
 
 [dev-packages]
 
