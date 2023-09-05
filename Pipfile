@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+uvicorn = "*"
+fastapi = "*"
+pandas = "*"
+openpyxl = "*"
+python-dotenv = "*"
+starlette = "*"
+azure-storage-blob = "*"
+numpy = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
