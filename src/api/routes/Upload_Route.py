@@ -1,15 +1,13 @@
 import os
-
 from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
 from src.azure_actions.blob_data import get_blob_data
 from src.azure_actions.kml_data import get_kml_data
 from src.azure_actions.upload import upload_to_azure
-
 from src.logs.logs import Log
-
 from src.utils.validation import df_validation
+from src.utils.file_remove import delete_local_files
 from src.models.input_model import FileInfo
 
 router = APIRouter(
@@ -21,30 +19,27 @@ router = APIRouter(
 def process_file(excel: FileInfo) -> JSONResponse:
     # validation that work on the blob data
     try:
-        Log.info('triggered upload rout process_file started')
+        Log.info(f'triggered upload rout process_file started')
         try:
             local_blob_csv_data, blob_name = get_blob_data(excel.accunt_name, excel.container_name, excel.folder_name)
             local_kml_file = get_kml_data(excel.accunt_name, excel.container_name, excel.folder_name)
         except Exception as e:
-            error_message = "An error occurred while connecting azure, check connection info : " + str(e)
-            return JSONResponse(content=error_message, status_code=400)
+            raise ValueError(str(e))
 
+        # creat csv file for DataFrame to work with
         new_csv_file = df_validation(local_blob_csv_data, blob_name)
 
-        # change extantion xlsx to tgv
-        local_tgv_file = new_csv_file.rsplit(".", 1)[0] + ".tgv"
+        # change extinction xlsx to tgv for uploading to azure
+        local_tgv_file: str = new_csv_file.rsplit(".", 1)[0] + ".tgv"
         os.rename(new_csv_file, local_tgv_file)
 
-        print('befor upload')
-        # breakpoint()
-        # upload_to_azure(excel.accunt_name, excel.container_name, excel.folder_name, local_tgv_file)
-        #
-        # upload_to_azure(excel.accunt_name, excel.container_name, excel.folder_name, local_kml_file)
-        print('after upload ')
+        # uploading data to azure
+        upload_to_azure(excel.accunt_name, excel.container_name, excel.folder_name, local_tgv_file)
 
-        os.remove(local_blob_csv_data)
-        os.remove(local_tgv_file)
-        os.remove(local_kml_file)
+        upload_to_azure(excel.accunt_name, excel.container_name, excel.folder_name, local_kml_file)
+
+        # deleting the local files after uploading it to the azure
+        delete_local_files(local_blob_csv_data, local_tgv_file, local_kml_file)
 
         return JSONResponse(content={"message": "new file created successfully and was upload to the azure storage",
                                      "azure_account": f'{excel.accunt_name}',
@@ -54,6 +49,6 @@ def process_file(excel: FileInfo) -> JSONResponse:
                                      "kml file_name in azure folder": f'{local_kml_file}'},
                             status_code=200)
     except ValueError as e:
-        Log.error('triggered upload rout process_file failed :', str(e))
+        Log.error(f'triggered upload rout process_file failed : {str(e)}')
         error_response = {"error": str(e)}
         return JSONResponse(content=error_response, status_code=400)

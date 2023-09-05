@@ -29,6 +29,6 @@ def blob_convert_to_csv(blob_content) -> str:
 
         return output_file
     except Exception as e:
-        Log.error('triggered blob_convert_to_csv failed :', str(e))
+        Log.error(f'triggered blob_convert_to_csv failed : {str(e)}')
         error_message: str = "An error occurred while converting blob data to csv: " + str(e)
         raise ValueError(error_message)
