@@ -12,6 +12,7 @@ python-dotenv = "*"
 starlette = "*"
 azure-storage-blob = "*"
 numpy = "*"
+requests = "*"
 
 [dev-packages]
 

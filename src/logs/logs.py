@@ -1,6 +1,6 @@
 import datetime
 
-from src.config.config import LOGS_FILE_PATH
+from src.config import Config
 
 
 class Log:
@@ -9,7 +9,7 @@ class Log:
         current_datetime = datetime.datetime.now()
         formatted_datetime: str = current_datetime.strftime('%d/%m/%Y %H:%M:%S')
 
-        with open(LOGS_FILE_PATH, 'a') as file:
+        with open(Config.LOGS_FILE_PATH, 'a') as file:
             file.write(f"{type} - {formatted_datetime} - {content} \n")
 
     @classmethod

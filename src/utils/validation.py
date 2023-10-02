@@ -1,17 +1,18 @@
 import os
 from typing import List
+
 import pandas as pd
 import numpy as np
 
-from src.config.config import DEVIATION_RANGE
-from src.logs.logs import Log
+from src.config import Config
+from src.logs import Log
 from src.utils.file_remove import delete_local_files
 
 
 def df_validation(local_blob_csv_data: str, blob_name: str) -> str:
-    try:
-        Log.info('triggered df_validation started')
+    Log.info('validation df_validation started')
 
+    try:
         df = pd.read_csv(local_blob_csv_data, header=None)
 
         values_to_median: List = []
@@ -26,7 +27,7 @@ def df_validation(local_blob_csv_data: str, blob_name: str) -> str:
 
         # check which should be deleted by checking if the DEVIATION_RANGE is to big/small
         rows_to_delete = df[
-            (df.iloc[:, 3] > median_value + DEVIATION_RANGE) | (df.iloc[:, 3] < median_value - DEVIATION_RANGE)]
+            (df.iloc[:, 3] > median_value + Config.DEVIATION_RANGE) | (df.iloc[:, 3] < median_value - Config.DEVIATION_RANGE)]
 
         # Drop the rows marked for deletion
         df = df.drop(rows_to_delete.index)
@@ -38,7 +39,7 @@ def df_validation(local_blob_csv_data: str, blob_name: str) -> str:
 
         return new_file_name
     except Exception as e:
-        Log.error(f'triggered df_validation failed : {e}')
-        delete_local_files(local_blob_csv_data)
+        Log.error(f'validation df_validation failed : {e}')
+        delete_local_files([local_blob_csv_data])
         error_message: str = "An error occurred while reading and validating local_blob_csv_data : " + str(e)
         raise ValueError(error_message)

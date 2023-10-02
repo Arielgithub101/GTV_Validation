@@ -1,10 +1,10 @@
 import csv
-from src.logs.logs import Log
+from src.logs import Log
 
 
-def blob_convert_to_csv(blob_content) -> str:
+def blob_convert_to_csv(blob_content: str) -> str:
     try:
-        Log.info('triggered blob_convert_to_csv started')
+        Log.info('validation blob_convert_to_csv started')
 
         # Split the input string into lines
         lines = blob_content.strip().split('\n')
@@ -26,9 +26,9 @@ def blob_convert_to_csv(blob_content) -> str:
             csv_writer = csv.writer(csv_file)
             # Write each row of CSV data
             csv_writer.writerows(csv_data)
-
         return output_file
+
     except Exception as e:
-        Log.error(f'triggered blob_convert_to_csv failed : {str(e)}')
+        Log.error(f'validation blob_convert_to_csv failed : {str(e)}')
         error_message: str = "An error occurred while converting blob data to csv: " + str(e)
         raise ValueError(error_message)

@@ -1,8 +1,9 @@
 import os
-from src.logs.logs import Log
+from typing import List
+from src.logs import Log
 
 
-def delete_local_files(*args) -> None:
+def delete_local_files(files_path: List) -> None:
     """
     Delete multiple local files.
 
@@ -11,12 +12,13 @@ def delete_local_files(*args) -> None:
 
     Returns:
         None
+        :param files_path:
     """
-    Log.info(f'triggered delete_local_files started ')
-    for file_path in args:
+    Log.info(f'validation delete_local_files started ')
+    for file_path in files_path:
         try:
             os.remove(file_path)
         except OSError as e:
-            Log.error(f'triggered delete_local_files failed : {e}')
+            Log.error(f'validation delete_local_files failed : {e}')
             error_message: str = "An error occurred while deleting local file : " + str(e)
             raise ValueError(error_message)
