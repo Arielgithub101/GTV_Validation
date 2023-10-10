@@ -39,7 +39,7 @@ def df_validation(local_blob_csv_data: str, blob_name: str) -> str:
 
         return new_file_name
     except Exception as e:
-        Log.error(f'validation df_validation failed : {e}')
-        delete_local_files([local_blob_csv_data])
         error_message: str = "An error occurred while reading and validating local_blob_csv_data : " + str(e)
+        Log.error(f'validation df_validation failed : {error_message}')
+        delete_local_files([local_blob_csv_data])
         raise ValueError(error_message)

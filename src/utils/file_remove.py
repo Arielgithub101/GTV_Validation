@@ -19,6 +19,6 @@ def delete_local_files(files_path: List) -> None:
         try:
             os.remove(file_path)
         except OSError as e:
-            Log.error(f'validation delete_local_files failed : {e}')
             error_message: str = "An error occurred while deleting local file : " + str(e)
+            Log.error(f'validation delete_local_files failed : {error_message}')
             raise ValueError(error_message)

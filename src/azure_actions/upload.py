@@ -21,6 +21,6 @@ def upload_files_to_azure_blob(account_name: str, container_name: str, blob_name
                 blob_client.upload_blob(data, overwrite=True)
 
     except (IOError, Exception) as e:
-        Log.error(f'Validation upload_to_azure failed: {str(e)}')
         error_message = "An error occurred while trying to upload to Azure: " + str(e)
+        Log.error(f'Validation upload_to_azure failed: {error_message}')
         raise ValueError(error_message)

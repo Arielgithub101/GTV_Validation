@@ -13,6 +13,8 @@ starlette = "*"
 azure-storage-blob = "*"
 numpy = "*"
 requests = "*"
+pytest = "*"
+httpx = "*"
 
 [dev-packages]
 

@@ -8,8 +8,8 @@ from src.logs import Log
 
 
 def get_kml_data(account_name: str, container_name: str, folder_name: str) -> str:
+    Log.info('validation get_kml_data started')
     try:
-        Log.info('validation get_kml_data started')
 
         container_client = azure_connection(account_name, container_name)
 
@@ -28,7 +28,11 @@ def get_kml_data(account_name: str, container_name: str, folder_name: str) -> st
                     blob_data = blob_client.download_blob()
                     blob_data.readinto(local_file)
                 return blob_name
+        raise ValueError(
+            f'error occurred while trying to get kml file data from subdirectory_path : {subdirectory_path},no file '
+            f'found')
+
     except Exception as e:
-        Log.error(f'validation get_kml_data failed: {str(e)}')
-        error_message = "An error occurred while trying to get mission planning kml data: " + str(e)
+        error_message = "An error occurred while trying to get mission planning kml file data: " + str(e)
+        Log.error(f'validation get_kml_data failed: {error_message}')
         raise ValueError(error_message)

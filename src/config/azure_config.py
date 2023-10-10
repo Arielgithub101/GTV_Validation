@@ -12,7 +12,7 @@ class ConfigConnection:
             Log.info('validation get_azure_connection_string started')
             return os.environ.get(f'{account_name}_connection_string')
         except (ConnectionError, Exception) as e:
-            Log.error(f'validation get_azure_connection_string failed: {str(e)}')
-            error_message: str = "An error occurred while connecting azure: " + str(e)
+            error_message: str = "error occurred while getting connection_string, check account param: " + str(e)
+            Log.error(f'validation get_azure_connection_string failed: {error_message}')
             raise ValueError(error_message)
 

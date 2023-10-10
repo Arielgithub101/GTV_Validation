@@ -3,9 +3,8 @@ from src.logs import Log
 
 
 def blob_convert_to_csv(blob_content: str) -> str:
+    Log.info('validation blob_convert_to_csv started')
     try:
-        Log.info('validation blob_convert_to_csv started')
-
         # Split the input string into lines
         lines = blob_content.strip().split('\n')
 
@@ -29,6 +28,6 @@ def blob_convert_to_csv(blob_content: str) -> str:
         return output_file
 
     except Exception as e:
-        Log.error(f'validation blob_convert_to_csv failed : {str(e)}')
         error_message: str = "An error occurred while converting blob data to csv: " + str(e)
+        Log.error(f'validation blob_convert_to_csv failed : {error_message}')
         raise ValueError(error_message)
