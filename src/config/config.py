@@ -6,3 +6,4 @@ class Config:
     DEVIATION_RANGE: int = int(os.environ['deviation_range'])
     PORT: int = 9900
     HOST: str = "0.0.0.0"
+

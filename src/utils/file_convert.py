@@ -1,33 +1,45 @@
+import io
 import csv
+import pandas as pd
+
+from src.config import Const
 from src.logs import Log
 
 
-def blob_convert_to_csv(blob_content: str) -> str:
-    Log.info('validation blob_convert_to_csv started')
+def tgv_to_csv(tgv_blob_content):
+    Log.info('validation tgv_to_csv started')
     try:
-        # Split the input string into lines
-        lines = blob_content.strip().split('\n')
+        output_file = Const.NEW_OUTPUT
 
-        # Initialize a list to store rows of CSV data
-        csv_data = []
+        # Create a DataFrame from the TSV content
+        df = pd.read_csv(io.StringIO(tgv_blob_content), header=None, delimiter='\t')
 
-        # Split each line into values and append to csv_data
-        for line in lines:
-            values = line.split()
-            csv_data.append(values)
+        # Save the DataFrame as a CSV file
+        df.to_csv(output_file, header=False, index=False)
 
-        # Specify the CSV output file path
-        output_file = 'new_output.csv'
-
-        # Open the CSV file in write mode
-        with open(output_file, mode='w', newline='') as csv_file:
-            # Create a CSV writer
-            csv_writer = csv.writer(csv_file)
-            # Write each row of CSV data
-            csv_writer.writerows(csv_data)
+        Log.info('done activate - validation tgv_to_csv ')
         return output_file
-
     except Exception as e:
         error_message: str = "An error occurred while converting blob data to csv: " + str(e)
-        Log.error(f'validation blob_convert_to_csv failed : {error_message}')
+        Log.error(f'validation tgv_to_csv failed : {error_message}')
+        raise ValueError(error_message)
+
+
+def csv_to_tgv(csv_file_path, tgv_file_path):
+    Log.info('validation csv_to_tgv started')
+    try:
+        # Read the edited CSV file and convert it to TGV format
+        with open(csv_file_path, 'r', newline='') as csv_file:
+            csv_reader = csv.reader(csv_file)
+            # Skip the first row (headers)
+            next(csv_reader, None)
+            tgv_data = '\n'.join(['\t'.join(row) for row in csv_reader])
+
+        # Save the updated TGV data back to the TGV file
+        with open(tgv_file_path, 'w', newline='') as tgv_file:
+            tgv_file.write(tgv_data)
+        Log.info('done activate - validation csv_to_csv ')
+    except Exception as e:
+        error_message: str = "An error occurred while converting csv_to_tgv data : " + str(e)
+        Log.error(f'validation csv_to_tgv failed : {error_message}')
         raise ValueError(error_message)

@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 from azure.storage.blob import ContainerClient, BlobClient
@@ -19,6 +18,7 @@ def upload_files_to_azure_blob(account_name: str, container_name: str, blob_name
 
             with open(local_file_path, 'rb') as data:
                 blob_client.upload_blob(data, overwrite=True)
+        Log.info('done activate - Validation upload_to_azure ')
 
     except (IOError, Exception) as e:
         error_message = "An error occurred while trying to upload to Azure: " + str(e)

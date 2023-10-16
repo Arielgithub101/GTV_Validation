@@ -11,7 +11,6 @@ from src.utils.file_remove import delete_local_files
 
 def df_validation(local_blob_csv_data: str, blob_name: str) -> str:
     Log.info('validation df_validation started')
-
     try:
         df = pd.read_csv(local_blob_csv_data, header=None)
 
@@ -33,10 +32,13 @@ def df_validation(local_blob_csv_data: str, blob_name: str) -> str:
         df = df.drop(rows_to_delete.index)
 
         file_name: str = os.path.basename(blob_name)
-        new_file_name: str = file_name.rsplit(".", 1)[0] + ".xlsx"
 
-        df.to_excel(new_file_name, index=False)
+        file_name, old_extension = os.path.splitext(file_name)  # Split into name and extension
+        new_file_name = file_name + ".csv"
 
+        df.to_csv(new_file_name, index=False)
+        # return new_file_name
+        Log.info('done activate - validation df_validation ')
         return new_file_name
     except Exception as e:
         error_message: str = "An error occurred while reading and validating local_blob_csv_data : " + str(e)

@@ -1,5 +1,3 @@
-import os
-
 from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
@@ -12,6 +10,7 @@ from src.logs import Log
 from src.utils import df_validation
 from src.utils import delete_local_files
 from src.models import FileInfo
+from src.utils.file_convert import csv_to_tgv
 
 router = APIRouter(
     prefix="/tgv_process"
@@ -23,26 +22,25 @@ def process_file(file_data: FileInfo) -> JSONResponse:
     Log.info(f'validation route process_file started')
     # validation that work on the blob data
     try:
-        try:
-            tgv_csv_data_file, tgv_file_name = get_tgv_data(file_data.account_name, file_data.container_name,
-                                                            file_data.blob_name)
-            kml_data_file = get_kml_data(file_data.account_name, file_data.container_name, file_data.blob_name)
-        except Exception as e:
-            raise ValueError(str(e))
+        tgv_csv_data_file, tgv_file_name = get_tgv_data(file_data.account_name, file_data.container_name,
+                                                        file_data.blob_name)
+        kml_data_file = get_kml_data(file_data.account_name, file_data.container_name, file_data.blob_name)
 
         # create csv file for DataFrame to work with
         new_csv_file: str = df_validation(tgv_csv_data_file, tgv_file_name)
 
-        # change extinction xlsx to tgv for uploading to azure
+        # change extinction to tgv for uploading to azure
         tgv_data_file: str = new_csv_file.rsplit(".", 1)[0] + ".tgv"
-        os.rename(new_csv_file, tgv_data_file)
+
+        csv_to_tgv(new_csv_file, tgv_data_file)
 
         # uploading data to azure
         upload_files_to_azure_blob(file_data.account_name, file_data.container_name, file_data.blob_name,
                                    [tgv_data_file, kml_data_file])
 
         # deleting the local files after uploading it to the azure
-        delete_local_files([tgv_csv_data_file, tgv_data_file, kml_data_file])
+        delete_local_files([new_csv_file, tgv_csv_data_file, tgv_data_file, kml_data_file])
+        Log.info(f'done activate validation route process_file ')
 
         return JSONResponse(content={"message": "new file created successfully and was upload to the azure storage",
                                      "azure_account": f'{file_data.account_name}',
