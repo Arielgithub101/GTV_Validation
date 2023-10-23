@@ -1,16 +1,12 @@
 from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
-from src.azure_actions import get_tgv_data
-from src.azure_actions import get_kml_data
-from src.azure_actions import upload_files_to_azure_blob
-
+from src.azure_actions import get_tgv_data, get_kml_data, upload_files_to_azure_blob
+from src.config import Const
 from src.logs import Log
-
-from src.utils import df_validation
-from src.utils import delete_local_files
+from src.utils import df_tail_validation, delete_local_files, csv_to_tgv
 from src.models import FileInfo
-from src.utils.file_convert import csv_to_tgv
+from src.validations import validation_files_directory
 
 router = APIRouter(
     prefix="/tgv_process"
@@ -18,19 +14,28 @@ router = APIRouter(
 
 
 @router.post("/")
-def process_file(file_data: FileInfo) -> JSONResponse:
-    Log.info(f'validation route process_file started')
+def process_file(file_data: FileInfo):
+    Log.info(f'validation route process_file func started')
     # validation that work on the blob data
     try:
-        tgv_csv_data_file, tgv_file_name = get_tgv_data(file_data.account_name, file_data.container_name,
-                                                        file_data.blob_name)
-        kml_data_file = get_kml_data(file_data.account_name, file_data.container_name, file_data.blob_name)
+        files_directory_error: JSONResponse = validation_files_directory(file_data.account_name,
+                                                                         file_data.container_name,
+                                                                         file_data.blob_name)
+        if files_directory_error.status_code != 200:
+            return files_directory_error
+
+        tgv_as_csv_data_file: str
+        tgv_file_name: str
+        tgv_as_csv_data_file, tgv_file_name = get_tgv_data(file_data.account_name, file_data.container_name,
+                                                           file_data.blob_name)
+
+        kml_data_file: str = get_kml_data(file_data.account_name, file_data.container_name, file_data.blob_name)
 
         # create csv file for DataFrame to work with
-        new_csv_file: str = df_validation(tgv_csv_data_file, tgv_file_name)
+        new_csv_file: str = df_tail_validation(tgv_as_csv_data_file, tgv_file_name)
 
         # change extinction to tgv for uploading to azure
-        tgv_data_file: str = new_csv_file.rsplit(".", 1)[0] + ".tgv"
+        tgv_data_file: str = new_csv_file.rsplit(".", 1)[0] + Const.TGV_EXTENSION
 
         csv_to_tgv(new_csv_file, tgv_data_file)
 
@@ -39,7 +44,8 @@ def process_file(file_data: FileInfo) -> JSONResponse:
                                    [tgv_data_file, kml_data_file])
 
         # deleting the local files after uploading it to the azure
-        delete_local_files([new_csv_file, tgv_csv_data_file, tgv_data_file, kml_data_file])
+        delete_local_files([new_csv_file, tgv_as_csv_data_file, tgv_data_file, kml_data_file])
+
         Log.info(f'done activate validation route process_file ')
 
         return JSONResponse(content={"message": "new file created successfully and was upload to the azure storage",
@@ -51,5 +57,5 @@ def process_file(file_data: FileInfo) -> JSONResponse:
                             status_code=200)
     except (Exception, ValueError) as e:
         error_response = {"error": str(e)}
-        Log.error(f'validation upload rout process_file failed : {error_response}')
+        Log.error(f'validation upload rout process_file func failed : {error_response}')
         return JSONResponse(content=error_response, status_code=400)

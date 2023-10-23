@@ -9,7 +9,7 @@ from src.logs import Log
 from src.utils.file_remove import delete_local_files
 
 
-def df_validation(local_blob_csv_data: str, blob_name: str) -> str:
+def df_tail_validation(local_blob_csv_data: str, blob_name: str) -> str:
     Log.info('validation df_validation started')
     try:
         df = pd.read_csv(local_blob_csv_data, header=None)
